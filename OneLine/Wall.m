@@ -31,14 +31,22 @@
     return self;
 }
 
+- (CGFloat)height
+{
+    if (self.leftWallEdge.size.height > self.rightWallEdge.size.height) return self.leftWallEdge.size.height;
+    else return self.rightWallEdge.size.height;
+}
+
 static const CGFloat WALL_EDGE_PROPORTION = 1.0/3.0;
 
 - (void)createWall
 {
     // Left wall edge
     self.leftWallEdge = [SKSpriteNode spriteNodeWithImageNamed:self.edgeImageName];
-    //[self.leftWallEdge setScale:0.5];
+    if (self.edgeSize != 0.0) [self.leftWallEdge setScale:self.edgeSize/self.leftWallEdge.size.width];
     self.leftWallEdge.position = CGPointMake(self.gapXPosition - self.gapSize/2.0 - self.leftWallEdge.size.width/2.0, 0.0);
+    self.leftWallEdge.colorBlendFactor = 1.0;
+    self.leftWallEdge.color = self.color;
     self.leftWallEdge.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.leftWallEdge.size.width/2.0];
     self.leftWallEdge.physicsBody.dynamic = NO;
     
@@ -51,13 +59,15 @@ static const CGFloat WALL_EDGE_PROPORTION = 1.0/3.0;
     self.leftWall.strokeColor = self.color;
     self.leftWall.fillColor = self.color;
     self.leftWall.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:leftWallRect.size
-                                                           center:CGPointMake(CGRectGetMidX(leftWallRect), CGRectGetMidY(leftWallRect))];
+                                                                center:CGPointMake(CGRectGetMidX(leftWallRect), CGRectGetMidY(leftWallRect))];
     self.leftWall.physicsBody.dynamic = NO;
     
     // Right wall edge
     self.rightWallEdge = [SKSpriteNode spriteNodeWithImageNamed:self.edgeImageName];
-    //[self.rightWallEdge setScale:0.5];
+    if (self.edgeSize != 0.0) [self.rightWallEdge setScale:self.edgeSize/self.rightWallEdge.size.width];
     self.rightWallEdge.position = CGPointMake(self.gapXPosition + self.gapSize/2.0 + self.leftWallEdge.size.width/2.0, 0.0);
+    self.rightWallEdge.colorBlendFactor = 1.0;
+    self.rightWallEdge.color = self.color;
     self.rightWallEdge.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.rightWallEdge.size.width/2.0];
     self.rightWallEdge.physicsBody.dynamic = NO;
     
@@ -70,7 +80,7 @@ static const CGFloat WALL_EDGE_PROPORTION = 1.0/3.0;
     self.rightWall.strokeColor = self.color;
     self.rightWall.fillColor = self.color;
     self.rightWall.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:rightWallRect.size
-                                                            center:CGPointMake(CGRectGetMidX(rightWallRect), CGRectGetMidY(rightWallRect))];
+                                                                 center:CGPointMake(CGRectGetMidX(rightWallRect), CGRectGetMidY(rightWallRect))];
     self.rightWall.physicsBody.dynamic = NO;
     
     
@@ -79,5 +89,19 @@ static const CGFloat WALL_EDGE_PROPORTION = 1.0/3.0;
     [self addChild:self.rightWallEdge];
     [self addChild:self.rightWall];
 }
+
+- (void)setColor:(SKColor *)newColor
+{
+    _color = newColor;
+    
+    self.leftWallEdge.color = newColor;
+    self.leftWall.strokeColor = newColor;
+    self.leftWall.fillColor = newColor;
+    self.rightWallEdge.color = newColor;
+    self.rightWall.strokeColor = newColor;
+    self.rightWall.fillColor = newColor;
+}
+
+
 
 @end

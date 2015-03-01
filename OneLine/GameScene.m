@@ -8,11 +8,12 @@
 
 #import "GameScene.h"
 #import "Wall.h"
+#import "Player.h"
 
 
-@interface GameScene()
-@property SKSpriteNode* player;
-@property SKAction* moveAndRemoveWall;
+@interface GameScene() <SKPhysicsContactDelegate>
+@property (strong, nonatomic) Player* player;
+@property (strong, nonatomic) SKAction* moveAndRemoveWall;
 @end
 
 
@@ -21,6 +22,7 @@
 -(void)didMoveToView:(SKView *)view
 {
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
+    self.physicsWorld.contactDelegate = self;
     
     self.backgroundColor = [SKColor blackColor];
     
@@ -30,29 +32,33 @@
 
 static NSString *const PLAYER_SPRITE_IMAGE = @"Player.png";
 
+static const uint32_t playerCategory = 1 << 0;
+static const uint32_t wallsCategory = 1 << 1;
+static const uint32_t collectableCategory = 1 << 2;
+
 -(void)initPlayer
 {
-    self.player = [SKSpriteNode spriteNodeWithImageNamed:PLAYER_SPRITE_IMAGE];
+    self.player = [[Player alloc] initWithImageNamed:PLAYER_SPRITE_IMAGE];
     
     // Scale and position
     self.player.position = CGPointMake(CGRectGetMidX(self.frame),
                                        self.frame.origin.y + self.frame.size.height/3.0);
-    //[self.player setScale:0.5];
+    self.player.realSize = 32.0;
     
-    // Physics
-    SKPhysicsBody *playerPhysics = [SKPhysicsBody bodyWithCircleOfRadius:self.player.size.width/2.0];
-    self.player.physicsBody = playerPhysics;
+    self.player.physicsBody.categoryBitMask = playerCategory;
+    self.player.physicsBody.collisionBitMask = wallsCategory | collectableCategory;
+    self.player.physicsBody.contactTestBitMask = wallsCategory | collectableCategory;
     
     [self addChild:self.player];
 }
 
 static const CGFloat WALL_HEIGHT = 32.0;
-static const CGFloat WALL_SPEED = 300.0;
+static const CGFloat WALL_SPEED = 150.0;
 static const CGFloat DELAY_BETWEEN_WALLS = 2.0;
 
 - (void)initWalls
 {
-    CGFloat distanceToMove = self.frame.size.height + WALL_HEIGHT*4.0;
+    CGFloat distanceToMove = self.frame.size.height + WALL_HEIGHT*2.0;
     SKAction *moveWall = [SKAction repeatActionForever:[SKAction moveByX:0.0
                                                                        y:-distanceToMove
                                                                 duration:distanceToMove/WALL_SPEED]];
@@ -68,84 +74,41 @@ static const CGFloat DELAY_BETWEEN_WALLS = 2.0;
 }
 
 static NSString *const WALL_SPRITE_IMAGE = @"Player.png";
-static const CGFloat WALL_GAP_SIZE = 100.0;
-static const CGFloat WALL_GAP_BORDER_OFFSET = 150.0;
-static const CGFloat WALL_GAP_LIMIT_OFFSET = 16.0;
+static const CGFloat WALL_GAP_SIZE = 50.0;
+static const CGFloat WALL_GAP_BORDER_OFFSET = 75.0;
+//static const CGFloat WALL_GAP_LIMIT_OFFSET = 16.0;
 
 - (void)spawnWall
 {
     Wall *wall = [[Wall alloc] init];
     
-    wall.position = CGPointMake(0.0, self.frame.size.height);
+    // Wall parameters
+    wall.position = CGPointMake(0.0, self.frame.size.height + WALL_HEIGHT);
     wall.width = self.frame.size.width;
-    
     wall.edgeImageName = WALL_SPRITE_IMAGE;
-    
+    wall.edgeSize = 32.0;
     NSInteger gapMax = self.frame.size.width - WALL_GAP_BORDER_OFFSET*2.0;
-    wall.gapXPosition = (arc4random() % gapMax) + WALL_GAP_BORDER_OFFSET;
-    
+    NSInteger gapXPosition = (arc4random() % gapMax) + WALL_GAP_BORDER_OFFSET;
+    wall.gapXPosition = gapXPosition;
     wall.gapSize = WALL_GAP_SIZE;
-    
     wall.color = [SKColor whiteColor];
     
+    // Wall creation (with previous specified parameters)
     [wall createWall];
     
     [wall runAction:self.moveAndRemoveWall];
     [self addChild:wall];
+    
+    // Invisible collectable
+    SKShapeNode *invisibleCollectable = [SKShapeNode shapeNodeWithCircleOfRadius:10.0];
+    invisibleCollectable.position = CGPointMake(gapXPosition, self.frame.size.height + WALL_HEIGHT);
+    invisibleCollectable.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:10.0];
+    
+    [invisibleCollectable runAction:self.moveAndRemoveWall];
+    [self addChild:invisibleCollectable];
 }
 
-/*-(void)spawnWall
-{
-    SKNode *wall = [SKNode node];
-    wall.position = CGPointMake(0.0, self.frame.size.height + WALL_HEIGHT*2.0);
-    
-    NSInteger gapMax = self.frame.size.width - WALL_GAP_BORDER_OFFSET*2.0;
-    CGFloat gapXPosition = (arc4random() % gapMax) + WALL_GAP_BORDER_OFFSET;
-    
-    // Left wall
-    SKSpriteNode *leftWallLimit = [SKSpriteNode spriteNodeWithImageNamed:WALL_SPRITE_IMAGE];
-    leftWallLimit.position = CGPointMake(gapXPosition - WALL_GAP_SIZE/2.0, 0.0);
-    leftWallLimit.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:leftWallLimit.size.width/2.0];
-    leftWallLimit.physicsBody.dynamic = NO;
-    [wall addChild:leftWallLimit];
-    
-    CGRect leftWallRect = CGRectMake(self.frame.origin.x,
-                                     -WALL_HEIGHT/4.0,
-                                     leftWallLimit.position.x - WALL_GAP_LIMIT_OFFSET - self.frame.origin.x,
-                                     WALL_HEIGHT/2.0);
-    SKShapeNode *leftWall = [SKShapeNode shapeNodeWithRect:leftWallRect];
-    leftWall.strokeColor = [UIColor whiteColor];
-    leftWall.fillColor = [UIColor whiteColor];
-    leftWall.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:leftWallRect.size
-                                                           center:CGPointMake(CGRectGetMidX(leftWallRect), CGRectGetMidY(leftWallRect))];
-    leftWall.physicsBody.dynamic = NO;
-    [wall addChild:leftWall];
-    
-    // Right wall
-    SKSpriteNode *rightWallLimit = [SKSpriteNode spriteNodeWithImageNamed:WALL_SPRITE_IMAGE];
-    rightWallLimit.position = CGPointMake(gapXPosition + WALL_GAP_SIZE/2.0, 0.0);
-    rightWallLimit.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:rightWallLimit.size.width/2.0];
-    rightWallLimit.physicsBody.dynamic = NO;
-    [wall addChild:rightWallLimit];
-    
-    CGRect rightWallRect = CGRectMake(rightWallLimit.position.x + WALL_GAP_LIMIT_OFFSET,
-                                      -WALL_HEIGHT/4.0,
-                                      self.frame.size.width - (rightWallLimit.position.x + WALL_GAP_LIMIT_OFFSET),
-                                      WALL_HEIGHT/2.0);
-    SKShapeNode *rightWall = [SKShapeNode shapeNodeWithRect:rightWallRect];
-    rightWall.strokeColor = [UIColor whiteColor];
-    rightWall.fillColor = [UIColor whiteColor];
-    rightWall.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:rightWallRect.size
-                                                            center:CGPointMake(CGRectGetMidX(rightWallRect), CGRectGetMidY(rightWallRect))];
-    rightWall.physicsBody.dynamic = NO;
-    [wall addChild:rightWall];
-
-    [wall runAction:self.moveAndRemoveWall];
-    
-    [self addChild:wall];
-}*/
-
-static const CGFloat PLAYER_INITIAL_VELOCITY = 400.0;
+static const CGFloat PLAYER_INITIAL_VELOCITY = 200.0;
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -166,6 +129,40 @@ static const CGFloat PLAYER_INITIAL_VELOCITY = 400.0;
 
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
+}
+
+- (void)didBeginContact:(SKPhysicsContact *)contact
+{
+    // COLLISION!
+    // If collision with "collectible object", increment points and change color of everything
+    // If collision with anything else, lose the game
+    
+    NSLog(@"COLLISION DETECTED");
+    
+    NSLog(@"%@", self.player.color);
+    NSLog(@"%@", [SKColor whiteColor]);
+    NSLog(@"%@", [UIColor whiteColor]);
+
+    CGFloat red = 0.0, green = 0.0, blue = 0.0;
+    [self.player.color getRed:&red green:&green blue:&blue alpha:nil];
+    
+    if (red == 1.0 && green == 1.0 && blue == 1.0) {
+        // PLAYER/WALLS BLACK, BACKGROUND WHITE
+        self.backgroundColor = [SKColor whiteColor];
+        self.player.color = [SKColor blackColor];
+        for (SKNode *child in self.children) {
+            if ([child isKindOfClass:[Wall class]]) ((Wall*)child).color = [SKColor blackColor];
+        }
+    }
+    else {
+        // PLAYER/WALLS WHITE, BACKGROUND BLACK
+        self.backgroundColor = [SKColor blackColor];
+        self.player.color = [SKColor whiteColor];
+        for (SKNode *child in self.children) {
+            if ([child isKindOfClass:[Wall class]]) ((Wall*)child).color = [SKColor whiteColor];
+        }
+    }
+    
 }
 
 @end
