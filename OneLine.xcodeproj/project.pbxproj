@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		386B8DD41AA2801A00AAD81C /* MainMenuScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 386B8DD31AA2801A00AAD81C /* MainMenuScene.m */; };
+		386B8DD71AA65A3400AAD81C /* GameParameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 386B8DD61AA65A3400AAD81C /* GameParameters.m */; };
 		389CBD2D1A8938FE00FEB39F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 389CBD2C1A8938FE00FEB39F /* main.m */; };
 		389CBD301A8938FE00FEB39F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 389CBD2F1A8938FE00FEB39F /* AppDelegate.m */; };
 		389CBD331A8938FE00FEB39F /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 389CBD321A8938FE00FEB39F /* GameScene.m */; };
@@ -33,6 +34,8 @@
 /* Begin PBXFileReference section */
 		386B8DD21AA2801A00AAD81C /* MainMenuScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainMenuScene.h; sourceTree = "<group>"; };
 		386B8DD31AA2801A00AAD81C /* MainMenuScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainMenuScene.m; sourceTree = "<group>"; };
+		386B8DD51AA65A3400AAD81C /* GameParameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameParameters.h; sourceTree = "<group>"; };
+		386B8DD61AA65A3400AAD81C /* GameParameters.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameParameters.m; sourceTree = "<group>"; };
 		389CBD271A8938FE00FEB39F /* OneLine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OneLine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		389CBD2B1A8938FE00FEB39F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		389CBD2C1A8938FE00FEB39F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -72,6 +75,28 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		386B8DD81AA65B2800AAD81C /* Scenes */ = {
+			isa = PBXGroup;
+			children = (
+				386B8DD21AA2801A00AAD81C /* MainMenuScene.h */,
+				386B8DD31AA2801A00AAD81C /* MainMenuScene.m */,
+				389CBD311A8938FE00FEB39F /* GameScene.h */,
+				389CBD321A8938FE00FEB39F /* GameScene.m */,
+			);
+			name = Scenes;
+			sourceTree = "<group>";
+		};
+		386B8DD91AA65B4D00AAD81C /* Game elements */ = {
+			isa = PBXGroup;
+			children = (
+				38F81C9E1A9D0E0100E21B62 /* Wall.h */,
+				38F81C9F1A9D0E0100E21B62 /* Wall.m */,
+				38F57E4D1A9D5F43001F594B /* Player.h */,
+				38F57E4E1A9D5F43001F594B /* Player.m */,
+			);
+			name = "Game elements";
+			sourceTree = "<group>";
+		};
 		389CBD1E1A8938FE00FEB39F = {
 			isa = PBXGroup;
 			children = (
@@ -95,16 +120,12 @@
 			children = (
 				389CBD2E1A8938FE00FEB39F /* AppDelegate.h */,
 				389CBD2F1A8938FE00FEB39F /* AppDelegate.m */,
-				38F81C9E1A9D0E0100E21B62 /* Wall.h */,
-				38F81C9F1A9D0E0100E21B62 /* Wall.m */,
-				38F57E4D1A9D5F43001F594B /* Player.h */,
-				38F57E4E1A9D5F43001F594B /* Player.m */,
-				389CBD311A8938FE00FEB39F /* GameScene.h */,
-				389CBD321A8938FE00FEB39F /* GameScene.m */,
-				386B8DD21AA2801A00AAD81C /* MainMenuScene.h */,
-				386B8DD31AA2801A00AAD81C /* MainMenuScene.m */,
+				386B8DD51AA65A3400AAD81C /* GameParameters.h */,
+				386B8DD61AA65A3400AAD81C /* GameParameters.m */,
 				389CBD361A8938FE00FEB39F /* GameViewController.h */,
 				389CBD371A8938FE00FEB39F /* GameViewController.m */,
+				386B8DD81AA65B2800AAD81C /* Scenes */,
+				386B8DD91AA65B4D00AAD81C /* Game elements */,
 				389CBD391A8938FE00FEB39F /* Main.storyboard */,
 				389CBD3E1A8938FE00FEB39F /* LaunchScreen.xib */,
 				389CBD3C1A8938FE00FEB39F /* Images.xcassets */,
@@ -241,6 +262,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				38F81CA01A9D0E0100E21B62 /* Wall.m in Sources */,
+				386B8DD71AA65A3400AAD81C /* GameParameters.m in Sources */,
 				389CBD381A8938FE00FEB39F /* GameViewController.m in Sources */,
 				389CBD301A8938FE00FEB39F /* AppDelegate.m in Sources */,
 				389CBD331A8938FE00FEB39F /* GameScene.m in Sources */,

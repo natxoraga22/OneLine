@@ -9,9 +9,11 @@
 #import <SpriteKit/SpriteKit.h>
 
 
-@interface Player : SKSpriteNode
+@interface Player : SKNode
 
+@property (strong, nonatomic) SKColor *color;
 @property (nonatomic) CGFloat realSize;
+@property (nonatomic) CGVector velocity;
 
 - (instancetype)initWithImageNamed:(NSString *)imageName;
 

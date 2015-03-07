@@ -11,12 +11,12 @@
 
 @interface Wall : SKNode
 
+@property (strong, nonatomic) NSString *edgeImageName;
 @property (nonatomic) CGFloat width;
-@property (strong, nonatomic) NSString* edgeImageName;
 @property (nonatomic) CGFloat edgeSize;
 @property (nonatomic) CGFloat gapXPosition;
 @property (nonatomic) CGFloat gapSize;
-@property (strong, nonatomic) SKColor* color;
+@property (strong, nonatomic) SKColor *color;
 
 @property (readonly) CGFloat height;
 

@@ -13,38 +13,36 @@
 
 @implementation GameViewController
 
+#pragma mark - View lifecycle
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
     // Configure the view.
-    SKView * spriteKitView = (SKView *)self.view;
+    SKView *spriteKitView = (SKView *)self.view;
     spriteKitView.ignoresSiblingOrder = YES;
 
     // DEBUG options
     spriteKitView.showsFPS = YES;
-    spriteKitView.showsDrawCount = YES;
     spriteKitView.showsNodeCount = YES;
+    spriteKitView.showsDrawCount = YES;
+    spriteKitView.showsQuadCount = YES;
+    spriteKitView.showsFields = YES;
+    spriteKitView.showsPhysics = YES;
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    /*
-    // Create and configure the scene.
-    GameScene *scene = [[GameScene alloc] initWithSize:self.view.frame.size];
-    scene.scaleMode = SKSceneScaleModeAspectFill;
-    
-    // Present the scene.
-    SKView * spriteKitView = (SKView *)self.view;
-    [spriteKitView presentScene:scene];
-    */
-    
     // Main Menu
-    MainMenuScene *mainMenu = [[MainMenuScene alloc] initWithSize:self.view.frame.size];
+    MainMenuScene *mainMenu = [[MainMenuScene alloc] initWithSize:self.view.bounds.size];
     mainMenu.scaleMode = SKSceneScaleModeAspectFill;
     SKView *mainMenuView = (SKView *)self.view;
     [mainMenuView presentScene:mainMenu];
 }
+
+
+#pragma mark - Orientation
 
 - (BOOL)shouldAutorotate
 {
@@ -56,11 +54,8 @@
     return UIInterfaceOrientationMaskPortrait;
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
-}
+
+#pragma mark - Utility
 
 - (BOOL)prefersStatusBarHidden
 {
