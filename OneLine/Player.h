@@ -11,10 +11,17 @@
 
 @interface Player : SKNode
 
+extern NSString *const PLAYER_NODE_NAME;
+
 @property (strong, nonatomic) SKColor *color;
 @property (nonatomic) CGFloat realSize;
 @property (nonatomic) CGVector velocity;
 
+@property (nonatomic) uint32_t categoryBitMask;
+@property (nonatomic) uint32_t collisionBitMask;
+@property (nonatomic) uint32_t contactTestBitMask;
+
 - (instancetype)initWithImageNamed:(NSString *)imageName;
+- (void)computePath:(CGFloat)distanceMoved;
 
 @end
