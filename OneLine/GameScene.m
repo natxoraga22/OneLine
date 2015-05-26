@@ -16,9 +16,15 @@
 @property (nonatomic) NSTimeInterval lastCurrentTime;
 @property (nonatomic, readonly) CGFloat wallStartingYPosition;
 @property (nonatomic, readonly) CGFloat randomGapXPosition;
+// Game model
+@property (nonatomic) NSUInteger score;
 // Game elements
 @property (strong, nonatomic) Player *player;
 @property (strong, nonatomic) NSMutableArray *walls;
+@property (strong, nonatomic) SKLabelNode *scoreLabel;
+// Game state
+typedef NS_ENUM(NSUInteger, GameState) { WhiteElementsBlackBackground, BlackElementsWhiteBackground };
+@property (nonatomic) GameState gameState;
 // Wall actions
 @property (strong, nonatomic) SKAction *moveThenRestartWall;
 @property (strong, nonatomic) SKAction *moveThenRemoveCollectable;
@@ -39,10 +45,13 @@ static const uint32_t collectableCategory = 1 << 2;
 {
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     self.physicsWorld.contactDelegate = self;
-    self.backgroundColor = [SKColor blackColor];
+    self.gameState = WhiteElementsBlackBackground;
+    self.backgroundColor = [self getBackgroundColor];
+    self.score = 0;
     
-    self.player.color = [SKColor whiteColor];
-    //[self initWallSpawning];
+    [self addChild:self.player];
+    [self initWallSpawning];
+    [self addChild:self.scoreLabel];
 }
 
 - (void)initWallSpawning
@@ -52,6 +61,26 @@ static const uint32_t collectableCategory = 1 << 2;
     SKAction *delay = [SKAction waitForDuration:DELAY_BETWEEN_WALLS];
     SKAction *spawnThenDelay = [SKAction sequence:@[spawnWall, delay]];
     [self runAction:[SKAction repeatActionForever:spawnThenDelay]];
+}
+
+- (void)resetGame
+{
+    NSLog(@"RESET-GAME");
+    
+    // TODO: SOLVE THAT
+    
+    //[self removeAllChildren];
+    
+    //[self removeAllActions];
+    //[self.walls removeAllObjects];
+    
+    //self.player.position = CGPointMake(self.position.x + self.size.width/2.0,
+    //                                   self.position.y + self.size.height/3.0);
+        
+    //self.walls = nil;
+    
+    //[self addChild:self.player];
+    //[self initWallSpawning];
 }
 
 
@@ -68,28 +97,58 @@ static const uint32_t collectableCategory = 1 << 2;
     return (arc4random()%gapMax) + WALL_GAP_BORDER_OFFSET;
 }
 
+static NSString *const SCORE_LABEL_FONT_NAME = @"HelveticaNeue";
+static const CGFloat SCORE_LABEL_SCALE_FACTOR = 1.0/10.0;
+static const CGFloat SCORE_LABEL_VERTICAL_ALIGN_FACTOR = 9.0/10.0;
+
+- (SKLabelNode *)scoreLabel
+{
+    if (!_scoreLabel) {
+        _scoreLabel = [[SKLabelNode alloc] initWithFontNamed:SCORE_LABEL_FONT_NAME];
+        _scoreLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)self.score];
+        _scoreLabel.fontColor = [self getElementColor];
+        _scoreLabel.fontSize = self.view.bounds.size.width*SCORE_LABEL_SCALE_FACTOR;
+        _scoreLabel.position = CGPointMake(CGRectGetMidX(self.view.bounds),
+                                           CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*SCORE_LABEL_VERTICAL_ALIGN_FACTOR);
+    }
+    return _scoreLabel;
+}
+
+- (SKColor *)getBackgroundColor
+{
+    if (self.gameState == WhiteElementsBlackBackground) return [SKColor blackColor];
+    if (self.gameState == BlackElementsWhiteBackground) return [SKColor whiteColor];
+    return nil;
+}
+
+- (SKColor *)getElementColor
+{
+    if (self.gameState == WhiteElementsBlackBackground) return [SKColor whiteColor];
+    if (self.gameState == BlackElementsWhiteBackground) return [SKColor blackColor];
+    return nil;
+}
+
 
 #pragma mark - Game elements creation
 
-static NSString *const PLAYER_SPRITE_IMAGE = @"Player.png";
+static NSString *const PLAYER_SPRITE_IMAGE = @"Player";
 static const CGFloat PLAYER_SIZE = 32.0;
 
 - (Player *)player
 {
     if (!_player) {
         _player = [[Player alloc] initWithImageNamed:PLAYER_SPRITE_IMAGE];
+        _player.color = [self getElementColor];
         
         // Scale and position
         _player.position = CGPointMake(self.position.x + self.size.width/2.0,
-                                           self.position.y + self.size.height/3.0);
+                                       self.position.y + self.size.height/3.0);
         _player.realSize = PLAYER_SIZE;
         
         // Collision masks
         _player.categoryBitMask = playerCategory;
         _player.collisionBitMask = wallsCategory | collectableCategory;
         _player.contactTestBitMask = wallsCategory | collectableCategory;
-
-        [self addChild:_player];
     }
     return _player;
 }
@@ -153,8 +212,7 @@ static const CGFloat WALL_HEIGHT = 32.0;
 
 #pragma mark - Wall spawning
 
-static NSString *const WALL_SPRITE_IMAGE = @"Player.png";
-static CGFloat COLLECTABLE_RADIUS = 10.0;
+static NSString *const WALL_SPRITE_IMAGE = @"Player";
 
 - (void)spawnWall
 {
@@ -190,19 +248,36 @@ static CGFloat COLLECTABLE_RADIUS = 10.0;
     wall.edgeSize = WALL_HEIGHT;
     wall.gapXPosition = self.randomGapXPosition;
     wall.gapSize = WALL_GAP_SIZE;
-    wall.color = [SKColor whiteColor];
+    wall.color = [self getElementColor];
+    
+    // Collision masks
+    wall.categoryBitMask = wallsCategory;
+    wall.collisionBitMask = playerCategory;
+    wall.contactTestBitMask = playerCategory;
+    
     [wall createWall];
     
     return wall;
 }
 
+static NSString *const COLLECTABLE_NODE_NAME = @"COLLECTABLE_NODE";
+static CGFloat COLLECTABLE_RADIUS = 5.0;
+
 - (void)spawnCollectableAtPosition:(CGPoint)position
 {
     // Invisible collectable in order to know when we go through the wall
     SKShapeNode *invisibleCollectable = [SKShapeNode shapeNodeWithCircleOfRadius:COLLECTABLE_RADIUS];
-    invisibleCollectable.fillColor = [SKColor whiteColor];
+    invisibleCollectable.name = COLLECTABLE_NODE_NAME;
+    invisibleCollectable.fillColor = [SKColor greenColor];
+    invisibleCollectable.strokeColor = [SKColor greenColor];
+    invisibleCollectable.alpha = 0.0f;
     invisibleCollectable.position = position;
     invisibleCollectable.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:COLLECTABLE_RADIUS];
+    
+    // Collision masks
+    invisibleCollectable.physicsBody.categoryBitMask = collectableCategory;
+    invisibleCollectable.physicsBody.collisionBitMask = playerCategory;
+    invisibleCollectable.physicsBody.contactTestBitMask = playerCategory;
     
     [self addChild:invisibleCollectable];
     
@@ -216,7 +291,6 @@ static CGFloat COLLECTABLE_RADIUS = 10.0;
 {
     CGPoint location = [[touches anyObject] locationInNode:self];
     
-    // TODO: apply the force to the BODY of the player
     if (location.x < self.position.x + self.size.width/2.0) {
         self.player.velocity = CGVectorMake(-PLAYER_SPEED, 0.0);
     }
@@ -239,32 +313,80 @@ static CGFloat COLLECTABLE_RADIUS = 10.0;
     // If collision with "collectible object", increment points and change color of everything
     // If collision with anything else, lose the game
     
-    NSLog(@"COLLISION DETECTED");
+    SKNode *nodeA = contact.bodyA.node;
+    SKNode *nodeB = contact.bodyB.node;
     
-    NSLog(@"%@", self.player.color);
-    NSLog(@"%@", [SKColor whiteColor]);
-    NSLog(@"%@", [UIColor whiteColor]);
+    if ([nodeA.parent.name isEqualToString:WALL_NODE_NAME]) {
+        NSLog(@"COLLISION WITH WALL");
+        [self collisionWithNode:nodeA];
+    }
+    else if ([nodeB.parent.name isEqualToString:WALL_NODE_NAME]) {
+        NSLog(@"COLLISION WITH WALL");
+        [self collisionWithNode:nodeB];
+    }
+    else if ([nodeA.name isEqualToString:COLLECTABLE_NODE_NAME]) {
+        NSLog(@"COLLISION WITH COLLECTABLE");
+        [self collectableCollected:nodeA];
+    }
+    else if ([nodeB.name isEqualToString:COLLECTABLE_NODE_NAME]) {
+        NSLog(@"COLLISION WITH COLLECTABLE");
+        [self collectableCollected:nodeB];
+    }
+}
 
-    CGFloat red = 0.0, green = 0.0, blue = 0.0;
-    [self.player.color getRed:&red green:&green blue:&blue alpha:nil];
+- (void)collisionWithNode:(SKNode *)node
+{
+    // Stop wall spawning
+    [self removeAllActions];
     
-    if (red == 1.0 && green == 1.0 && blue == 1.0) {
-        // PLAYER/WALLS BLACK, BACKGROUND WHITE
-        self.backgroundColor = [SKColor whiteColor];
-        self.player.color = [SKColor blackColor];
-        for (SKNode *child in self.children) {
-            if ([child isKindOfClass:[Wall class]]) ((Wall*)child).color = [SKColor blackColor];
+    // Stop walls and collectables
+    for (SKNode *child in self.children) {
+        if ([child.name isEqualToString:WALL_NODE_NAME] || [child.name isEqualToString:COLLECTABLE_NODE_NAME]) {
+            [child removeAllActions];
         }
     }
-    else {
-        // PLAYER/WALLS WHITE, BACKGROUND BLACK
-        self.backgroundColor = [SKColor blackColor];
-        self.player.color = [SKColor whiteColor];
-        for (SKNode *child in self.children) {
-            if ([child isKindOfClass:[Wall class]]) ((Wall*)child).color = [SKColor whiteColor];
-        }
-    }
+    // TODO: Disable touch events
     
+    
+    // TODO: Stop player path
+    
+    [self.player setRedColorToBody];
+    
+    Wall *wall = (Wall *)node.parent;
+    [wall setRedColorToElementWithName:node.name];
+    
+    [self resetGame];
+}
+
+- (void)collectableCollected:(SKNode *)collectable
+{
+    [collectable removeFromParent];
+    
+    // Increase score
+    [self increaseScore];
+    
+    // Change colors
+    [self changeGameState];
+}
+
+- (void)changeGameState
+{
+    if (self.gameState == WhiteElementsBlackBackground) self.gameState = BlackElementsWhiteBackground;
+    else if (self.gameState == BlackElementsWhiteBackground) self.gameState = WhiteElementsBlackBackground;
+    
+    // Change color for everything
+    self.backgroundColor = [self getBackgroundColor];
+    self.player.color = [self getElementColor];
+    self.scoreLabel.fontColor = [self getElementColor];
+    for (SKNode *child in self.children) {
+        if ([child isKindOfClass:[Wall class]]) ((Wall*)child).color = [self getElementColor];
+    }
+}
+
+- (void)increaseScore
+{
+    self.score++;
+    self.scoreLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)self.score];
 }
 
 @end

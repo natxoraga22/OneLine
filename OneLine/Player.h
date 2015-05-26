@@ -17,11 +17,13 @@ extern NSString *const PLAYER_NODE_NAME;
 @property (nonatomic) CGFloat realSize;
 @property (nonatomic) CGVector velocity;
 
+// Collision handling
 @property (nonatomic) uint32_t categoryBitMask;
 @property (nonatomic) uint32_t collisionBitMask;
 @property (nonatomic) uint32_t contactTestBitMask;
 
 - (instancetype)initWithImageNamed:(NSString *)imageName;
 - (void)computePath:(CGFloat)distanceMoved;
+- (void)setRedColorToBody;
 
 @end

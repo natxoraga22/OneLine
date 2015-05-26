@@ -53,7 +53,7 @@ static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 2.0/3.0;
     return _gameTitle;
 }
 
-static NSString *const PLAY_BUTTON_IMAGE_NAME = @"Player.png";  //TODO: Change to PlayButton.png
+static NSString *const PLAY_BUTTON_IMAGE_NAME = @"Player-White.png";  //TODO: Change to PlayButton.png
 static NSString *const PLAY_BUTTON_NAME = @"PlayButton";
 static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
 
@@ -73,7 +73,8 @@ static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
 #pragma mark - Buttons behaviour
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{    
+{
+    NSLog(@"%lu", (unsigned long)touches.count);
     if (touches.count == 1) {
         CGPoint touchLocation = [[touches anyObject] locationInNode:self];
         SKNode *node = [self nodeAtPoint:touchLocation];

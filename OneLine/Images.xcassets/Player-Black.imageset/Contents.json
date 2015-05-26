@@ -3,17 +3,17 @@
     {
       "idiom" : "universal",
       "scale" : "1x",
-      "filename" : "Player64.png"
+      "filename" : "Player128-Black.png"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "Player128-smooth10%corrected.png"
+      "filename" : "Player128-Black-1.png"
     },
     {
       "idiom" : "universal",
       "scale" : "3x",
-      "filename" : "Player64-2.png"
+      "filename" : "Player128-Black-2.png"
     }
   ],
   "info" : {

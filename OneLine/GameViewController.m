@@ -28,8 +28,8 @@
     spriteKitView.showsNodeCount = YES;
     spriteKitView.showsDrawCount = YES;
     spriteKitView.showsQuadCount = YES;
-    //spriteKitView.showsFields = YES;
-    //spriteKitView.showsPhysics = YES;
+    spriteKitView.showsFields = YES;
+    spriteKitView.showsPhysics = YES;
 }
 
 - (void)viewWillAppear:(BOOL)animated

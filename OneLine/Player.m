@@ -10,6 +10,9 @@
 
 
 @interface Player()
+@property (strong, nonatomic) NSString *whiteImageName;
+@property (strong, nonatomic) NSString *blackImageName;
+@property (strong, nonatomic) NSString *redImageName;
 @property (strong, nonatomic) SKSpriteNode *body;
 @property (strong, nonatomic) SKShapeNode *path;
 @property (strong, nonatomic) NSMutableArray *pathPoints;
@@ -22,88 +25,37 @@
 
 NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
 
+static NSString *const PLAYER_SPRITE_WHITE_IMAGE_SUFFIX = @"-White";
+static NSString *const PLAYER_SPRITE_BLACK_IMAGE_SUFFIX = @"-Black";
+static NSString *const PLAYER_SPRITE_RED_IMAGE_SUFFIX = @"-Red";
+static NSString *const PLAYER_SPRITE_IMAGE_EXTENSION = @".png";
+
 - (instancetype)initWithImageNamed:(NSString *)imageName
 {
     if (self = [super init]) {
         self.name = PLAYER_NODE_NAME;
-        self.body = [SKSpriteNode spriteNodeWithImageNamed:imageName];
-        [self addChild:self.body];
+        self.whiteImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_WHITE_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
+        self.blackImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_BLACK_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
+        self.redImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_RED_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
+        self.color = [SKColor whiteColor];
         
-        // Physics
-        SKPhysicsBody *bodyPhysics = [SKPhysicsBody bodyWithCircleOfRadius:self.body.size.width/2.0];
-        self.body.physicsBody = bodyPhysics;
-        
-        // Color
-        self.body.color = [SKColor whiteColor];
-        self.body.colorBlendFactor = 1.0;
+        [self setupBody];
     }
     return self;
 }
 
-
-#pragma mark - Player path
-
-- (NSMutableArray *)pathPoints
+- (void)setupBody
 {
-    if (!_pathPoints) {
-        _pathPoints = [NSMutableArray array];
-    }
-    return _pathPoints;
+    self.body = [SKSpriteNode spriteNodeWithImageNamed:self.whiteImageName];
+    [self addChild:self.body];
+    
+    [self setupBodyPhysics];
 }
 
-- (void)computePath:(CGFloat)distanceMoved
+- (void)setupBodyPhysics
 {
-    [self computePathPoints:distanceMoved];
-    
-    CGMutablePathRef pathToDraw = CGPathCreateMutable();
-    CGPoint pathStartPosition = [self pathStartPosition];
-    CGPathMoveToPoint(pathToDraw, NULL, pathStartPosition.x, pathStartPosition.y - distanceMoved);
-    
-    for (NSInteger i = self.pathPoints.count - 1; i >= 0; i--) {
-        CGPoint point = [self.pathPoints[i] CGPointValue];
-        CGPathAddLineToPoint(pathToDraw, NULL, point.x, point.y);
-    }
-    
-    [self.path removeFromParent];
-    self.path = [SKShapeNode shapeNodeWithPath:pathToDraw];
-    self.path.strokeColor = self.color;
-    self.path.lineWidth = self.realSize/3.0;
-    [self addChild:self.path];
-}
-
-
-- (void)computePathPoints:(CGFloat)distanceMoved
-{
-    // "Add" the velocity to each point
-    for (NSInteger i = 0; i < self.pathPoints.count; i++) {
-        CGPoint point = [self.pathPoints[i] CGPointValue];
-        point.y -= distanceMoved;
-        self.pathPoints[i] = [NSValue valueWithCGPoint:point];
-    }
-    
-    // Remove all the points we don't need anymore
-    NSInteger indexToRemove = -1;
-    for (NSInteger i = 0; i < self.pathPoints.count; i++) {
-        CGPoint point = [self.pathPoints[i] CGPointValue];
-        if (point.y < -self.position.y) {
-            indexToRemove = i;
-        }
-    }
-    for (NSInteger i = 0; i < indexToRemove; i++) [self.pathPoints removeObjectAtIndex:i];
-}
-
-- (CGPoint)pathStartPosition
-{
-    CGFloat offset = self.realSize/4.0;
-    CGFloat xOffset = cosf(45.0*M_PI/180.0)*offset;
-    CGFloat yOffset = sinf(45.0*M_PI/180.0)*offset;
-    
-    // Going up-right
-    if (self.velocity.dx > 0) return CGPointMake(self.body.position.x - xOffset, self.body.position.y - yOffset);
-    // Going up-left
-    if (self.velocity.dx < 0) return CGPointMake(self.body.position.x + xOffset, self.body.position.y - yOffset);
-    // Going up
-    return CGPointMake(self.body.position.x, self.body.position.y - offset);
+    SKPhysicsBody *bodyPhysics = [SKPhysicsBody bodyWithCircleOfRadius:self.body.size.width/2.0];
+    self.body.physicsBody = bodyPhysics;
 }
 
 
@@ -111,7 +63,15 @@ NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
 
 - (void)setPosition:(CGPoint)newPosition
 {
+    self.body.physicsBody = nil;
+    
+    //NSLog(@"Before: %f, %f; %f, %f", self.position.x, self.position.y, self.body.position.x, self.body.position.y);
     [super setPosition:newPosition];
+    self.body.position = CGPointZero;
+    //NSLog(@"After: %f, %f; %f, %f", self.position.x, self.position.y, self.body.position.x, self.body.position.y);
+
+    // Body physics
+    [self setupBodyPhysics];
     
     // Restart path
     [self.pathPoints removeAllObjects];
@@ -122,7 +82,15 @@ NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
 {
     _color = newColor;
     
-    self.body.color = newColor;
+    if ([newColor isEqual:[SKColor whiteColor]]) self.body.texture = [SKTexture textureWithImageNamed:self.whiteImageName];
+    if ([newColor isEqual:[SKColor blackColor]]) self.body.texture = [SKTexture textureWithImageNamed:self.blackImageName];
+}
+
+- (void)setRedColorToBody
+{
+    self.body.texture = [SKTexture textureWithImageNamed:self.redImageName];
+    
+    // TODO: STOP PATH
 }
 
 - (CGFloat)realSize
@@ -148,6 +116,9 @@ NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
     [self.pathPoints addObject:[NSValue valueWithCGPoint:self.body.position]];
 }
 
+
+#pragma mark - Collision handling
+
 - (uint32_t)categoryBitMask
 {
     return self.body.physicsBody.categoryBitMask;
@@ -161,6 +132,58 @@ NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
 - (uint32_t)contactTestBitMask
 {
     return self.body.physicsBody.contactTestBitMask;
+}
+
+
+#pragma mark - Player path
+
+- (NSMutableArray *)pathPoints
+{
+    if (!_pathPoints) {
+        _pathPoints = [NSMutableArray array];
+    }
+    return _pathPoints;
+}
+
+static const CGFloat BODY_PATH_PROPORTION = 1.0/3.0;
+
+- (void)computePath:(CGFloat)distanceMoved
+{
+    [self computePathPoints:distanceMoved];
+    
+    CGMutablePathRef pathToDraw = CGPathCreateMutable();
+    CGPathMoveToPoint(pathToDraw, NULL, self.body.position.x, self.body.position.y - distanceMoved);
+    
+    for (NSInteger i = self.pathPoints.count - 1; i >= 0; i--) {
+        CGPoint point = [self.pathPoints[i] CGPointValue];
+        CGPathAddLineToPoint(pathToDraw, NULL, point.x, point.y);
+    }
+    
+    [self.path removeFromParent];
+    self.path = [SKShapeNode shapeNodeWithPath:pathToDraw];
+    self.path.strokeColor = self.color;
+    self.path.lineWidth = self.realSize*BODY_PATH_PROPORTION;
+    [self addChild:self.path];
+}
+
+- (void)computePathPoints:(CGFloat)distanceMoved
+{
+    // "Add" the velocity to each point
+    for (NSInteger i = 0; i < self.pathPoints.count; i++) {
+        CGPoint point = [self.pathPoints[i] CGPointValue];
+        point.y -= distanceMoved;
+        self.pathPoints[i] = [NSValue valueWithCGPoint:point];
+    }
+    
+    // Remove all the points we don't need anymore
+    NSInteger indexToRemove = -1;
+    for (NSInteger i = 0; i < self.pathPoints.count; i++) {
+        CGPoint point = [self.pathPoints[i] CGPointValue];
+        if (point.y < -self.position.y) {
+            indexToRemove = i;
+        }
+    }
+    for (NSInteger i = 0; i < indexToRemove; i++) [self.pathPoints removeObjectAtIndex:i];
 }
 
 @end

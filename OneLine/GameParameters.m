@@ -12,7 +12,7 @@
 @implementation GameParameters
 
 const CGFloat WALL_SPEED = 200.0;
-const CGFloat DELAY_BETWEEN_WALLS = 2.0;
+const CGFloat DELAY_BETWEEN_WALLS = 1.5;
 
 const CGFloat WALL_GAP_SIZE = 50.0;
 const CGFloat WALL_GAP_BORDER_OFFSET = 75.0;
