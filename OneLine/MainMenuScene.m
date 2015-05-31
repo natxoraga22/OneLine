@@ -11,9 +11,11 @@
 
 
 @interface MainMenuScene()
+// Menu elements
 @property (strong, nonatomic) SKLabelNode *gameTitle;
 @property (strong, nonatomic) SKSpriteNode *playButton;
-@property (nonatomic) NSUInteger playButtonTouchesCount;
+// Gesture recognizers
+@property (strong, nonatomic) UILongPressGestureRecognizer *playButtonTapRecognizer;
 @end
 
 
@@ -30,6 +32,16 @@
     // Scene elements
     [self addChild:self.gameTitle];
     [self addChild:self.playButton];
+    
+    // Gesture recognizers
+    self.playButtonTapRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(playButtonTapped:)];
+    self.playButtonTapRecognizer.minimumPressDuration = 0.001;
+    [self.view addGestureRecognizer:self.playButtonTapRecognizer];
+}
+
+- (void)willMoveFromView:(SKView *)view
+{
+    [self.view removeGestureRecognizer:self.playButtonTapRecognizer];
 }
 
 
@@ -38,7 +50,7 @@
 static NSString *const GAME_TITLE_FONT_NAME = @"HelveticaNeue";
 static NSString *const GAME_TITLE = @"One Line";
 static const CGFloat GAME_TITLE_SCALE_FACTOR = 1.0/6.0;
-static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 2.0/3.0;
+static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
 
 - (SKLabelNode *)gameTitle
 {
@@ -53,7 +65,7 @@ static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 2.0/3.0;
     return _gameTitle;
 }
 
-static NSString *const PLAY_BUTTON_IMAGE_NAME = @"Player-White.png";  //TODO: Change to PlayButton.png
+static NSString *const PLAY_BUTTON_IMAGE_NAME = @"PlayButton.png";
 static NSString *const PLAY_BUTTON_NAME = @"PlayButton";
 static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
 
@@ -72,64 +84,25 @@ static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
 
 #pragma mark - Buttons behaviour
 
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    NSLog(@"%lu", (unsigned long)touches.count);
-    if (touches.count == 1) {
-        CGPoint touchLocation = [[touches anyObject] locationInNode:self];
-        SKNode *node = [self nodeAtPoint:touchLocation];
-        
-        if ([node.name isEqualToString:PLAY_BUTTON_NAME]) {
-            [self incrementPlayButtonTouchesCount];
-        }
-    }
-}
-
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    if (touches.count == 1) {
-        CGPoint previousTouchLocation = [[touches anyObject] previousLocationInNode:self];
-        SKNode *previousNode = [self nodeAtPoint:previousTouchLocation];
-        
-        CGPoint touchLocation = [[touches anyObject] locationInNode:self];
-        SKNode *node = [self nodeAtPoint:touchLocation];
-            
-        if ([previousNode.name isEqualToString:PLAY_BUTTON_NAME] && ![node.name isEqualToString:PLAY_BUTTON_NAME]) {
-            [self decrementPlayButtonTouchesCount];
-        }
-    }
-}
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    if (touches.count == 1) {
-        CGPoint touchLocation = [[touches anyObject] locationInNode:self];
-        SKNode *node = [self nodeAtPoint:touchLocation];
-        
-        if ([node.name isEqualToString:PLAY_BUTTON_NAME]) {
-            [self decrementPlayButtonTouchesCount];
-        }
-    }
-}
-
 static const CGFloat PLAY_BUTTON_HIGHLIGHTED_SCALE = 1.15;
 
-- (void)incrementPlayButtonTouchesCount
+- (void)playButtonTapped:(UILongPressGestureRecognizer *)sender
 {
-    self.playButtonTouchesCount++;
-    [self.playButton setScale:PLAY_BUTTON_HIGHLIGHTED_SCALE];
-}
-
-- (void)decrementPlayButtonTouchesCount
-{
-    if (self.playButtonTouchesCount > 0) self.playButtonTouchesCount--;
-    if (self.playButtonTouchesCount == 0) {
-        [self.playButton setScale:1.0];
-        
-        // Present game scene
-        GameScene *gameScene = [GameScene sceneWithSize:self.view.bounds.size];
-        [self.view presentScene:gameScene];
+    CGPoint touchLocation = [sender locationInView:sender.view];
+    touchLocation = [self convertPointFromView:touchLocation];
+    SKNode *touchedNode = [self nodeAtPoint:touchLocation];
+    
+    if ([touchedNode.name isEqualToString:PLAY_BUTTON_NAME]) {
+        if (sender.state == UIGestureRecognizerStateBegan || sender.state == UIGestureRecognizerStateChanged) {
+            [self.playButton setScale:PLAY_BUTTON_HIGHLIGHTED_SCALE];
+        }
+        else if (sender.state == UIGestureRecognizerStateEnded) {
+            // Present game scene
+            GameScene *gameScene = [GameScene sceneWithSize:self.view.bounds.size];
+            [self.view presentScene:gameScene];
+        }
     }
+    else [self.playButton setScale:1.0];
 }
 
 @end
