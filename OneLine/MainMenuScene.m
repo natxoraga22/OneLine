@@ -36,10 +36,15 @@
     // Gesture recognizers
     self.playButtonTapRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(playButtonTapped:)];
     self.playButtonTapRecognizer.minimumPressDuration = 0.001;
-    [self.view addGestureRecognizer:self.playButtonTapRecognizer];
+    [view addGestureRecognizer:self.playButtonTapRecognizer];
 }
 
 - (void)willMoveFromView:(SKView *)view
+{
+    [self cleanScene];
+}
+
+- (void)cleanScene
 {
     [self.view removeGestureRecognizer:self.playButtonTapRecognizer];
 }
@@ -60,14 +65,14 @@ static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
         _gameTitle.fontColor = [SKColor whiteColor];
         _gameTitle.fontSize = self.view.bounds.size.width*GAME_TITLE_SCALE_FACTOR;
         _gameTitle.position = CGPointMake(CGRectGetMidX(self.view.bounds),
-                                         CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*GAME_TITLE_VERTICAL_ALIGN_FACTOR);
+                                          CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*GAME_TITLE_VERTICAL_ALIGN_FACTOR);
     }
     return _gameTitle;
 }
 
 static NSString *const PLAY_BUTTON_IMAGE_NAME = @"PlayButton.png";
 static NSString *const PLAY_BUTTON_NAME = @"PlayButton";
-static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
+static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 2.0/5.0;
 
 - (SKSpriteNode *)playButton
 {
@@ -98,6 +103,7 @@ static const CGFloat PLAY_BUTTON_HIGHLIGHTED_SCALE = 1.15;
         }
         else if (sender.state == UIGestureRecognizerStateEnded) {
             // Present game scene
+            [self cleanScene];
             GameScene *gameScene = [GameScene sceneWithSize:self.view.bounds.size];
             [self.view presentScene:gameScene];
         }

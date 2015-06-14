@@ -12,7 +12,8 @@
 @interface Player()
 @property (strong, nonatomic) NSString *whiteImageName;
 @property (strong, nonatomic) NSString *blackImageName;
-@property (strong, nonatomic) NSString *redImageName;
+@property (strong, nonatomic) NSString *redWhiteImageName;
+@property (strong, nonatomic) NSString *redBlackImageName;
 @property (strong, nonatomic) SKSpriteNode *body;
 @property (strong, nonatomic) SKShapeNode *path;
 @property (strong, nonatomic) NSMutableArray *pathPoints;
@@ -27,7 +28,8 @@ NSString *const PLAYER_NODE_NAME = @"PLAYER_NODE";
 
 static NSString *const PLAYER_SPRITE_WHITE_IMAGE_SUFFIX = @"-White";
 static NSString *const PLAYER_SPRITE_BLACK_IMAGE_SUFFIX = @"-Black";
-static NSString *const PLAYER_SPRITE_RED_IMAGE_SUFFIX = @"-Red";
+static NSString *const PLAYER_SPRITE_REDWHITE_IMAGE_SUFFIX = @"-RedWhite";
+static NSString *const PLAYER_SPRITE_REDBLACK_IMAGE_SUFFIX = @"-RedBlack";
 static NSString *const PLAYER_SPRITE_IMAGE_EXTENSION = @".png";
 
 - (instancetype)initWithImageNamed:(NSString *)imageName
@@ -36,7 +38,8 @@ static NSString *const PLAYER_SPRITE_IMAGE_EXTENSION = @".png";
         self.name = PLAYER_NODE_NAME;
         self.whiteImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_WHITE_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
         self.blackImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_BLACK_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
-        self.redImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_RED_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
+        self.redWhiteImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_REDWHITE_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
+        self.redBlackImageName = [NSString stringWithFormat:@"%@%@%@", imageName, PLAYER_SPRITE_REDBLACK_IMAGE_SUFFIX, PLAYER_SPRITE_IMAGE_EXTENSION];
         self.color = [SKColor whiteColor];
         
         [self setupBody];
@@ -88,9 +91,8 @@ static NSString *const PLAYER_SPRITE_IMAGE_EXTENSION = @".png";
 
 - (void)setRedColorToBody
 {
-    self.body.texture = [SKTexture textureWithImageNamed:self.redImageName];
-    
-    // TODO: STOP PATH
+    if ([self.color isEqual:[SKColor whiteColor]]) self.body.texture = [SKTexture textureWithImageNamed:self.redBlackImageName];
+    if ([self.color isEqual:[SKColor blackColor]]) self.body.texture = [SKTexture textureWithImageNamed:self.redWhiteImageName];
 }
 
 - (CGFloat)realSize

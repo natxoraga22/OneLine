@@ -12,12 +12,22 @@
 
 @interface GameParameters : NSObject
 
-extern CGFloat const WALL_SPEED;
-extern CGFloat const DELAY_BETWEEN_WALLS;
+#pragma mark - Constants
 
 extern CGFloat const WALL_GAP_SIZE;
-extern CGFloat const WALL_GAP_BORDER_OFFSET;
 
-extern CGFloat const PLAYER_SPEED;
+
+#pragma mark - Game speed
+
+@property (nonatomic, readonly) CGFloat gameSpeed;
+
+- (void)incrementGameSpeed;
+
+
+#pragma mark - Distance and delay between walls
+
+@property (nonatomic) CGFloat wallWidth;
+@property (nonatomic, readonly) CGFloat delayBetweenWalls;
+@property (nonatomic, readonly) CGFloat wallGapBorderOffset;
 
 @end

@@ -12,7 +12,8 @@
 @interface Wall()
 @property (strong, nonatomic, readonly) NSString *whiteImageName;
 @property (strong, nonatomic, readonly) NSString *blackImageName;
-@property (strong, nonatomic, readonly) NSString *redImageName;
+@property (strong, nonatomic, readonly) NSString *redWhiteImageName;
+@property (strong, nonatomic, readonly) NSString *redBlackImageName;
 @property (strong, nonatomic) SKSpriteNode *leftWallEdge;
 @property (strong, nonatomic) SKShapeNode *leftWall;
 @property (strong, nonatomic) SKSpriteNode *rightWallEdge;
@@ -39,7 +40,8 @@ NSString *const WALL_NODE_NAME = @"WALL_NODE";
 
 static NSString *const WALL_SPRITE_WHITE_IMAGE_SUFFIX = @"-White";
 static NSString *const WALL_SPRITE_BLACK_IMAGE_SUFFIX = @"-Black";
-static NSString *const WALL_SPRITE_RED_IMAGE_SUFFIX = @"-Red";
+static NSString *const WALL_SPRITE_REDWHITE_IMAGE_SUFFIX = @"-RedWhite";
+static NSString *const WALL_SPRITE_REDBLACK_IMAGE_SUFFIX = @"-RedBlack";
 static NSString *const WALL_SPRITE_IMAGE_EXTENSION = @".png";
 
 - (NSString *)whiteImageName
@@ -52,9 +54,14 @@ static NSString *const WALL_SPRITE_IMAGE_EXTENSION = @".png";
     return [NSString stringWithFormat:@"%@%@%@", self.edgeImageName, WALL_SPRITE_BLACK_IMAGE_SUFFIX, WALL_SPRITE_IMAGE_EXTENSION];
 }
 
-- (NSString *)redImageName
+- (NSString *)redWhiteImageName
 {
-    return [NSString stringWithFormat:@"%@%@%@", self.edgeImageName, WALL_SPRITE_RED_IMAGE_SUFFIX, WALL_SPRITE_IMAGE_EXTENSION];
+    return [NSString stringWithFormat:@"%@%@%@", self.edgeImageName, WALL_SPRITE_REDWHITE_IMAGE_SUFFIX, WALL_SPRITE_IMAGE_EXTENSION];
+}
+
+- (NSString *)redBlackImageName
+{
+    return [NSString stringWithFormat:@"%@%@%@", self.edgeImageName, WALL_SPRITE_REDBLACK_IMAGE_SUFFIX, WALL_SPRITE_IMAGE_EXTENSION];
 }
 
 - (CGFloat)height
@@ -90,7 +97,8 @@ static NSString *const WALL_SPRITE_IMAGE_EXTENSION = @".png";
     
     if ([name isEqualToString:LEFT_WALL_EDGE_NODE_NAME] || [name isEqualToString:RIGHT_WALL_EDGE_NODE_NAME]) {
         SKSpriteNode *edgeElement = (SKSpriteNode *)element;
-        edgeElement.texture = [SKTexture textureWithImageNamed:self.redImageName];
+        if ([self.color isEqual:[SKColor whiteColor]]) edgeElement.texture = [SKTexture textureWithImageNamed:self.redBlackImageName];
+        if ([self.color isEqual:[SKColor blackColor]]) edgeElement.texture = [SKTexture textureWithImageNamed:self.redWhiteImageName];
     }
     else if ([name isEqualToString:LEFT_WALL_NODE_NAME] || [name isEqualToString:RIGHT_WALL_NODE_NAME]) {
         SKShapeNode *wallElement = (SKShapeNode *)element;

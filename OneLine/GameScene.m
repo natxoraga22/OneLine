@@ -7,27 +7,31 @@
 //
 
 #import "GameScene.h"
+#import "GameOverScene.h"
 #import "GameParameters.h"
 #import "Wall.h"
 #import "Player.h"
 
 
 @interface GameScene() <SKPhysicsContactDelegate>
-@property (nonatomic) NSTimeInterval lastCurrentTime;
-@property (nonatomic, readonly) CGFloat wallStartingYPosition;
-@property (nonatomic, readonly) CGFloat randomGapXPosition;
-// Game model
+// Model
+@property (strong, nonatomic) GameParameters *gameParameters;
 @property (nonatomic) NSUInteger score;
-// Game elements
+
+// Scene elements
 @property (strong, nonatomic) Player *player;
 @property (strong, nonatomic) NSMutableArray *walls;
+@property (strong, nonatomic) NSMutableArray *collectables;
 @property (strong, nonatomic) SKLabelNode *scoreLabel;
+
 // Game state
-typedef NS_ENUM(NSUInteger, GameState) { WhiteElementsBlackBackground, BlackElementsWhiteBackground };
-@property (nonatomic) GameState gameState;
-// Wall actions
-@property (strong, nonatomic) SKAction *moveThenRestartWall;
-@property (strong, nonatomic) SKAction *moveThenRemoveCollectable;
+typedef NS_ENUM(NSUInteger, GameColorState) { WhiteElementsBlackBackground, BlackElementsWhiteBackground };
+@property (nonatomic) GameColorState gameColorState;
+@property (nonatomic) BOOL isPlayerMoving;
+
+// Wall & collectables spawning
+@property (nonatomic) NSTimeInterval lastCurrentTime;
+@property (nonatomic) NSTimeInterval wallTimer;
 @end
 
 
@@ -43,93 +47,43 @@ static const uint32_t collectableCategory = 1 << 2;
 
 - (void)didMoveToView:(SKView *)view
 {
+    [self setupScene];
+}
+
+- (void)setupScene
+{
+    // Physics
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     self.physicsWorld.contactDelegate = self;
-    self.gameState = WhiteElementsBlackBackground;
-    self.backgroundColor = [self getBackgroundColor];
+    
+    // Model
+    self.gameParameters.wallWidth = self.size.width;
     self.score = 0;
     
+    // Game state
+    self.gameColorState = WhiteElementsBlackBackground;
+    self.backgroundColor = [self getBackgroundColor];
+    self.isPlayerMoving = YES;
+    
+    // Walls & collectables spawning
+    self.lastCurrentTime = 0;
+    self.wallTimer = 0;
+    
+    // Scene elements
     [self addChild:self.player];
-    [self initWallSpawning];
     [self addChild:self.scoreLabel];
 }
 
-- (void)initWallSpawning
+
+#pragma mark - Game elements lazy instantiation
+
+- (GameParameters *)gameParameters
 {
-    // Spawn a new wall each X seconds
-    SKAction *spawnWall = [SKAction performSelector:@selector(spawnWall) onTarget:self];
-    SKAction *delay = [SKAction waitForDuration:DELAY_BETWEEN_WALLS];
-    SKAction *spawnThenDelay = [SKAction sequence:@[spawnWall, delay]];
-    [self runAction:[SKAction repeatActionForever:spawnThenDelay]];
-}
-
-- (void)resetGame
-{
-    NSLog(@"RESET-GAME");
-    
-    // TODO: SOLVE THAT
-    
-    //[self removeAllChildren];
-    
-    //[self removeAllActions];
-    //[self.walls removeAllObjects];
-    
-    //self.player.position = CGPointMake(self.position.x + self.size.width/2.0,
-    //                                   self.position.y + self.size.height/3.0);
-        
-    //self.walls = nil;
-    
-    //[self addChild:self.player];
-    //[self initWallSpawning];
-}
-
-
-#pragma mark - Getters & setters
-
-- (CGFloat)wallStartingYPosition
-{
-    return self.size.height + WALL_HEIGHT;
-}
-
-- (CGFloat)randomGapXPosition
-{
-    NSInteger gapMax = self.size.width - WALL_GAP_BORDER_OFFSET*2.0;
-    return (arc4random()%gapMax) + WALL_GAP_BORDER_OFFSET;
-}
-
-static NSString *const SCORE_LABEL_FONT_NAME = @"HelveticaNeue";
-static const CGFloat SCORE_LABEL_SCALE_FACTOR = 1.0/10.0;
-static const CGFloat SCORE_LABEL_VERTICAL_ALIGN_FACTOR = 9.0/10.0;
-
-- (SKLabelNode *)scoreLabel
-{
-    if (!_scoreLabel) {
-        _scoreLabel = [[SKLabelNode alloc] initWithFontNamed:SCORE_LABEL_FONT_NAME];
-        _scoreLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)self.score];
-        _scoreLabel.fontColor = [self getElementColor];
-        _scoreLabel.fontSize = self.view.bounds.size.width*SCORE_LABEL_SCALE_FACTOR;
-        _scoreLabel.position = CGPointMake(CGRectGetMidX(self.view.bounds),
-                                           CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*SCORE_LABEL_VERTICAL_ALIGN_FACTOR);
+    if (!_gameParameters) {
+        _gameParameters = [[GameParameters alloc] init];
     }
-    return _scoreLabel;
+    return _gameParameters;
 }
-
-- (SKColor *)getBackgroundColor
-{
-    if (self.gameState == WhiteElementsBlackBackground) return [SKColor blackColor];
-    if (self.gameState == BlackElementsWhiteBackground) return [SKColor whiteColor];
-    return nil;
-}
-
-- (SKColor *)getElementColor
-{
-    if (self.gameState == WhiteElementsBlackBackground) return [SKColor whiteColor];
-    if (self.gameState == BlackElementsWhiteBackground) return [SKColor blackColor];
-    return nil;
-}
-
-
-#pragma mark - Game elements creation
 
 static NSString *const PLAYER_SPRITE_IMAGE = @"Player";
 static const CGFloat PLAYER_SIZE = 32.0;
@@ -153,8 +107,6 @@ static const CGFloat PLAYER_SIZE = 32.0;
     return _player;
 }
 
-static const CGFloat WALL_HEIGHT = 32.0;
-
 - (NSMutableArray *)walls
 {
     if (!_walls) {
@@ -163,48 +115,118 @@ static const CGFloat WALL_HEIGHT = 32.0;
     return _walls;
 }
 
-- (SKAction *)moveThenRestartWall
+- (NSMutableArray *)collectables
 {
-    if (!_moveThenRestartWall) {
-        // Move wall down and restart it's position when it reaches the bottom
-        CGFloat distanceToMove = self.size.height + WALL_HEIGHT*2.0;
-        SKAction *moveWall = [SKAction moveByX:0.0 y:-distanceToMove duration:distanceToMove/WALL_SPEED];
-        SKAction *restartWall = [SKAction customActionWithDuration:0.0
-                                                       actionBlock:^(SKNode *node, CGFloat elapsedTime) {
-                                                           Wall *wall = (Wall *)node;
-                                                           [self restartWall:wall];
-                                                       }];
-        _moveThenRestartWall = [SKAction sequence:@[moveWall, restartWall]];
+    if (!_collectables) {
+        _collectables = [NSMutableArray array];
     }
-    return _moveThenRestartWall;
+    return _collectables;
 }
 
-- (void)restartWall:(Wall *)wall
+static NSString *const SCORE_LABEL_FONT_NAME = @"HelveticaNeue";
+static const CGFloat SCORE_LABEL_SCALE_FACTOR = 1.0/10.0;
+static const CGFloat SCORE_LABEL_VERTICAL_ALIGN_FACTOR = 9.0/10.0;
+
+- (SKLabelNode *)scoreLabel
 {
-    wall.position = CGPointMake(0.0, self.wallStartingYPosition);
-    wall.gapXPosition = self.randomGapXPosition;
-    [wall createWall];
+    if (!_scoreLabel) {
+        _scoreLabel = [[SKLabelNode alloc] initWithFontNamed:SCORE_LABEL_FONT_NAME];
+        _scoreLabel.text = [NSString stringWithFormat:@"%lu", (unsigned long)self.score];
+        _scoreLabel.fontColor = [self getElementColor];
+        _scoreLabel.fontSize = self.view.bounds.size.width*SCORE_LABEL_SCALE_FACTOR;
+        _scoreLabel.position = CGPointMake(CGRectGetMidX(self.view.bounds),
+                                           CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*SCORE_LABEL_VERTICAL_ALIGN_FACTOR);
+    }
+    return _scoreLabel;
 }
 
-- (SKAction *)moveThenRemoveCollectable
+
+#pragma mark - Getters & setters
+
+static const CGFloat WALL_HEIGHT = 32.0;
+
+- (CGFloat)getWallStartingYPosition
 {
-    if (!_moveThenRemoveCollectable) {
-        // Move collectable down with the wall and remove it when it reaches the bottom
-        CGFloat distanceToMove = self.size.height + WALL_HEIGHT*2.0;
-        SKAction *moveCollectable = [SKAction moveByX:0.0 y:-distanceToMove duration:distanceToMove/WALL_SPEED];
-        SKAction *removeCollectable = [SKAction removeFromParent];
+    return self.size.height + WALL_HEIGHT;
+}
+
+- (CGFloat)getRandomGapXPosition
+{
+    NSInteger gapMax = self.size.width - self.gameParameters.wallGapBorderOffset*2.0;
+    return (arc4random()%gapMax) + self.gameParameters.wallGapBorderOffset;
+}
+
+- (SKColor *)getBackgroundColor
+{
+    if (self.gameColorState == WhiteElementsBlackBackground) return [SKColor blackColor];
+    if (self.gameColorState == BlackElementsWhiteBackground) return [SKColor whiteColor];
+    return nil;
+}
+
+- (SKColor *)getElementColor
+{
+    if (self.gameColorState == WhiteElementsBlackBackground) return [SKColor whiteColor];
+    if (self.gameColorState == BlackElementsWhiteBackground) return [SKColor blackColor];
+    return nil;
+}
+
+
+#pragma mark - Wall & collectable actions
+
+- (SKAction *)getMoveFromTopToBottomAction
+{
+    CGFloat distanceToMove = self.size.height + WALL_HEIGHT*2.0;
+    return [SKAction moveByX:0.0 y:-distanceToMove duration:distanceToMove/self.gameParameters.gameSpeed];
+}
+
+- (SKAction *)getMoveThenRestartWallAction
+{
+    NSLog(@"GAME SPEED: %f", self.gameParameters.gameSpeed);
+    
+    // Move wall down and restart it's position when it reaches the bottom
+    SKAction *restartWall = [SKAction customActionWithDuration:0.0
+                                                   actionBlock:^(SKNode *node, CGFloat elapsedTime) {
+                                                       Wall *wall = (Wall *)node;
+                                                       wall.position = CGPointMake(0.0, [self getWallStartingYPosition]);
+                                                       wall.gapXPosition = [self getRandomGapXPosition];
+                                                       [wall createWall];
+                                                   }];
+    
+    return [SKAction sequence:@[[self getMoveFromTopToBottomAction], restartWall]];
+}
+
+- (SKAction *)getMoveThenRemoveCollectableAction
+{
+    // Move collectable down with the wall and remove it when it reaches the bottom
+    SKAction *removeCollectable = [SKAction customActionWithDuration:0.0
+                                                         actionBlock:^(SKNode *node, CGFloat elapsedTime) {
+                                                             SKShapeNode *collectable = (SKShapeNode *)node;
+                                                             [self.collectables removeObject:collectable];
+                                                             [collectable removeFromParent];
+                                                         }];
         
-        _moveThenRemoveCollectable = [SKAction sequence:@[moveCollectable, removeCollectable]];
-    }
-    return _moveThenRemoveCollectable;
+    return [SKAction sequence:@[[self getMoveFromTopToBottomAction], removeCollectable]];
 }
+
+
+#pragma mark - Update method
 
 - (void)update:(NSTimeInterval)currentTime
 {
     NSTimeInterval deltaTime = currentTime - self.lastCurrentTime;
     
-    CGFloat distanceMoved = WALL_SPEED*deltaTime;
-    [self.player computePath:distanceMoved];
+    // Player path
+    if (self.isPlayerMoving) {
+        CGFloat distanceMoved = self.gameParameters.gameSpeed*deltaTime;
+        [self.player computePath:distanceMoved];
+    }
+    
+    // Wall spawning
+    self.wallTimer -= deltaTime;
+    if (self.wallTimer <= 0) {
+        [self spawnWall];
+        self.wallTimer = self.gameParameters.delayBetweenWalls;
+    }
     
     self.lastCurrentTime = currentTime;
 }
@@ -219,10 +241,13 @@ static NSString *const WALL_SPRITE_IMAGE = @"Player";
     // Look for a wall to start moving down
     BOOL found = NO;
     for (Wall *wall in self.walls) {
-        if (!found && wall.position.y == self.wallStartingYPosition) {
+        if (!found && wall.position.y == [self getWallStartingYPosition]) {
             found = YES;
             
-            [wall runAction:self.moveThenRestartWall];
+            [wall removeAllActions];
+            wall.speed = 1.0;
+            
+            [wall runAction:[self getMoveThenRestartWallAction]];
             [self spawnCollectableAtPosition:CGPointMake(wall.gapXPosition, wall.position.y)];
         }
     }
@@ -232,7 +257,7 @@ static NSString *const WALL_SPRITE_IMAGE = @"Player";
         [self.walls addObject:wall];
         [self addChild:wall];
         
-        [wall runAction:self.moveThenRestartWall];
+        [wall runAction:[self getMoveThenRestartWallAction]];
         [self spawnCollectableAtPosition:CGPointMake(wall.gapXPosition, wall.position.y)];
     }
 }
@@ -242,11 +267,11 @@ static NSString *const WALL_SPRITE_IMAGE = @"Player";
     Wall *wall = [[Wall alloc] init];
     
     // Wall creation
-    wall.position = CGPointMake(0.0, self.wallStartingYPosition);
+    wall.position = CGPointMake(0.0, [self getWallStartingYPosition]);
     wall.width = self.size.width;
     wall.edgeImageName = WALL_SPRITE_IMAGE;
     wall.edgeSize = WALL_HEIGHT;
-    wall.gapXPosition = self.randomGapXPosition;
+    wall.gapXPosition = [self getRandomGapXPosition];
     wall.gapSize = WALL_GAP_SIZE;
     wall.color = [self getElementColor];
     
@@ -279,9 +304,10 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
     invisibleCollectable.physicsBody.collisionBitMask = playerCategory;
     invisibleCollectable.physicsBody.contactTestBitMask = playerCategory;
     
+    [self.collectables addObject:invisibleCollectable];
     [self addChild:invisibleCollectable];
     
-    [invisibleCollectable runAction:self.moveThenRemoveCollectable];
+    [invisibleCollectable runAction:[self getMoveThenRemoveCollectableAction]];
 }
 
 
@@ -289,13 +315,15 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    CGPoint location = [[touches anyObject] locationInNode:self];
+    if (self.isPlayerMoving) {
+        CGPoint location = [[touches anyObject] locationInNode:self];
     
-    if (location.x < self.position.x + self.size.width/2.0) {
-        self.player.velocity = CGVectorMake(-PLAYER_SPEED, 0.0);
-    }
-    else if (location.x > self.position.x + self.size.width/2.0) {
-        self.player.velocity = CGVectorMake(PLAYER_SPEED, 0.0);
+        if (location.x < self.position.x + self.size.width/2.0) {
+            self.player.velocity = CGVectorMake(-self.gameParameters.gameSpeed, 0.0);
+        }
+        else if (location.x > self.position.x + self.size.width/2.0) {
+            self.player.velocity = CGVectorMake(self.gameParameters.gameSpeed, 0.0);
+        }
     }
 }
 
@@ -336,6 +364,8 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
 
 - (void)collisionWithNode:(SKNode *)node
 {
+    self.isPlayerMoving = NO;
+    
     // Stop wall spawning
     [self removeAllActions];
     
@@ -345,17 +375,22 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
             [child removeAllActions];
         }
     }
-    // TODO: Disable touch events
-    
-    
-    // TODO: Stop player path
     
     [self.player setRedColorToBody];
     
     Wall *wall = (Wall *)node.parent;
     [wall setRedColorToElementWithName:node.name];
     
-    [self resetGame];
+    [self showGameOver];
+}
+
+- (void)showGameOver
+{
+    // Present game over scene
+    GameOverScene *gameOverScene = [GameOverScene sceneWithSize:self.view.bounds.size];
+    
+    SKTransition* fade = [SKTransition fadeWithColor:[SKColor blackColor] duration:5.0];
+    [self.view presentScene:gameOverScene transition:fade];
 }
 
 - (void)collectableCollected:(SKNode *)collectable
@@ -367,12 +402,31 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
     
     // Change colors
     [self changeGameState];
+
+    CGFloat oldSpeed = self.gameParameters.gameSpeed;
+    
+    // Increase game speed
+    [self.gameParameters incrementGameSpeed];
+    
+    CGFloat newSpeed = self.gameParameters.gameSpeed;
+    
+    // Increase created walls & collectables speed
+    for (Wall *wall in self.walls) {
+        if (wall.position.y != [self getWallStartingYPosition]) {
+            [wall runAction:[SKAction speedBy:(newSpeed/oldSpeed) duration:0.0]];
+        }
+    }
+    for (SKShapeNode *collectable in self.collectables) {
+        if (collectable.position.y != [self getWallStartingYPosition]) {
+            [collectable runAction:[SKAction speedBy:(newSpeed/oldSpeed) duration:0.0]];
+        }
+    }
 }
 
 - (void)changeGameState
 {
-    if (self.gameState == WhiteElementsBlackBackground) self.gameState = BlackElementsWhiteBackground;
-    else if (self.gameState == BlackElementsWhiteBackground) self.gameState = WhiteElementsBlackBackground;
+    if (self.gameColorState == WhiteElementsBlackBackground) self.gameColorState = BlackElementsWhiteBackground;
+    else if (self.gameColorState == BlackElementsWhiteBackground) self.gameColorState = WhiteElementsBlackBackground;
     
     // Change color for everything
     self.backgroundColor = [self getBackgroundColor];
