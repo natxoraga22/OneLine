@@ -8,6 +8,9 @@
 
 #import <SpriteKit/SpriteKit.h>
 
+
 @interface GameOverScene : SKScene
+
+- (void)setupGestureRecognizers;
 
 @end

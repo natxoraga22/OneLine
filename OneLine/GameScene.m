@@ -286,7 +286,7 @@ static NSString *const WALL_SPRITE_IMAGE = @"Player";
 }
 
 static NSString *const COLLECTABLE_NODE_NAME = @"COLLECTABLE_NODE";
-static CGFloat COLLECTABLE_RADIUS = 5.0;
+static const CGFloat COLLECTABLE_RADIUS = 5.0;
 
 - (void)spawnCollectableAtPosition:(CGPoint)position
 {
@@ -384,13 +384,17 @@ static CGFloat COLLECTABLE_RADIUS = 5.0;
     [self showGameOver];
 }
 
+static const CGFloat GAME_OVER_SCENE_TRANSITION_DURATION = 2.5;
+static const CGFloat GAME_OVER_SCENE_RECOGNIZERS_DELAY = 2.0;
+
 - (void)showGameOver
 {
     // Present game over scene
     GameOverScene *gameOverScene = [GameOverScene sceneWithSize:self.view.bounds.size];
     
-    SKTransition* fade = [SKTransition fadeWithColor:[SKColor blackColor] duration:5.0];
+    SKTransition* fade = [SKTransition crossFadeWithDuration:GAME_OVER_SCENE_TRANSITION_DURATION];
     [self.view presentScene:gameOverScene transition:fade];
+    [gameOverScene performSelector:@selector(setupGestureRecognizers) withObject:nil afterDelay:GAME_OVER_SCENE_RECOGNIZERS_DELAY];
 }
 
 - (void)collectableCollected:(SKNode *)collectable

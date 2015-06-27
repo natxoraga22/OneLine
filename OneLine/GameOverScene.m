@@ -32,11 +32,13 @@
     // Scene elements
     [self addChild:self.gameOverTitle];
     [self addChild:self.playButton];
-    
-    // Gesture recognizers
+}
+
+- (void)setupGestureRecognizers
+{
     self.playButtonTapRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(playButtonTapped:)];
     self.playButtonTapRecognizer.minimumPressDuration = 0.001;
-    [view addGestureRecognizer:self.playButtonTapRecognizer];
+    [self.view addGestureRecognizer:self.playButtonTapRecognizer];
 }
 
 - (void)willMoveFromView:(SKView *)view
@@ -52,9 +54,9 @@
 
 #pragma mark - Main menu elements
 
-static NSString *const GAME_OVER_TITLE_FONT_NAME = @"HelveticaNeue";
+static NSString *const GAME_OVER_TITLE_FONT_NAME = @"DINAlternate-Bold";
 static NSString *const GAME_OVER_TITLE = @"Game Over";
-static const CGFloat GAME_OVER_TITLE_SCALE_FACTOR = 1.0/7.0;
+static const CGFloat GAME_OVER_TITLE_SCALE_FACTOR = 1.0/6.0;
 static const CGFloat GAME_OVER_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
 
 - (SKLabelNode *)gameOverTitle
@@ -72,7 +74,7 @@ static const CGFloat GAME_OVER_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
 
 static NSString *const PLAY_BUTTON_IMAGE_NAME = @"PlayButton.png";
 static NSString *const PLAY_BUTTON_NAME = @"PlayButton";
-static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 1.0/2.0;
+static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 2.0/5.0;
 
 - (SKSpriteNode *)playButton
 {

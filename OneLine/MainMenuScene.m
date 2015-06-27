@@ -52,9 +52,9 @@
 
 #pragma mark - Main menu elements
 
-static NSString *const GAME_TITLE_FONT_NAME = @"HelveticaNeue";
+static NSString *const GAME_TITLE_FONT_NAME = @"DINAlternate-Bold";
 static NSString *const GAME_TITLE = @"One Line";
-static const CGFloat GAME_TITLE_SCALE_FACTOR = 1.0/6.0;
+static const CGFloat GAME_TITLE_SCALE_FACTOR = 2.0/11.0;
 static const CGFloat GAME_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
 
 - (SKLabelNode *)gameTitle
