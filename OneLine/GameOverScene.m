@@ -75,13 +75,15 @@ static const CGFloat GAME_OVER_TITLE_VERTICAL_ALIGN_FACTOR = 3.0/4.0;
 static NSString *const PLAY_BUTTON_IMAGE_NAME = @"PlayButton.png";
 static NSString *const PLAY_BUTTON_NAME = @"PlayButton";
 static const CGFloat PLAY_BUTTON_SCALE_FACTOR = 2.0/5.0;
+static const CGFloat PLAY_BUTTON_VERTICAL_ALIGN_FACTOR = 1.0/3.0;
 
 - (SKSpriteNode *)playButton
 {
     if (!_playButton) {
         _playButton = [[SKSpriteNode alloc] initWithImageNamed:PLAY_BUTTON_IMAGE_NAME];
         _playButton.name = PLAY_BUTTON_NAME;
-        _playButton.position = CGPointMake(CGRectGetMidX(self.view.bounds), CGRectGetMidY(self.view.bounds));
+        _playButton.position = CGPointMake(CGRectGetMidX(self.view.bounds),
+                                           CGRectGetMinY(self.view.bounds) + CGRectGetHeight(self.view.bounds)*PLAY_BUTTON_VERTICAL_ALIGN_FACTOR);
         [_playButton setSize:CGSizeMake(CGRectGetWidth(self.view.bounds)*PLAY_BUTTON_SCALE_FACTOR,
                                         CGRectGetWidth(self.view.bounds)*PLAY_BUTTON_SCALE_FACTOR)];
     }

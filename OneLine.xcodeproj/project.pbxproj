@@ -17,6 +17,7 @@
 		389CBD3B1A8938FE00FEB39F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 389CBD391A8938FE00FEB39F /* Main.storyboard */; };
 		389CBD3D1A8938FE00FEB39F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 389CBD3C1A8938FE00FEB39F /* Images.xcassets */; };
 		389CBD4C1A8938FE00FEB39F /* OneLineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 389CBD4B1A8938FE00FEB39F /* OneLineTests.m */; };
+		38B839A21B41CF860081E04F /* GameScore.m in Sources */ = {isa = PBXBuildFile; fileRef = 38B839A11B41CF860081E04F /* GameScore.m */; };
 		38F57E4F1A9D5F43001F594B /* Player.m in Sources */ = {isa = PBXBuildFile; fileRef = 38F57E4E1A9D5F43001F594B /* Player.m */; };
 		38F81CA01A9D0E0100E21B62 /* Wall.m in Sources */ = {isa = PBXBuildFile; fileRef = 38F81C9F1A9D0E0100E21B62 /* Wall.m */; };
 /* End PBXBuildFile section */
@@ -52,6 +53,8 @@
 		389CBD451A8938FE00FEB39F /* OneLineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OneLineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		389CBD4A1A8938FE00FEB39F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		389CBD4B1A8938FE00FEB39F /* OneLineTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OneLineTests.m; sourceTree = "<group>"; };
+		38B839A01B41CF860081E04F /* GameScore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameScore.h; sourceTree = "<group>"; };
+		38B839A11B41CF860081E04F /* GameScore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameScore.m; sourceTree = "<group>"; };
 		38F57E4D1A9D5F43001F594B /* Player.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Player.h; sourceTree = "<group>"; };
 		38F57E4E1A9D5F43001F594B /* Player.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Player.m; sourceTree = "<group>"; };
 		38F81C9E1A9D0E0100E21B62 /* Wall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Wall.h; sourceTree = "<group>"; };
@@ -123,10 +126,9 @@
 			children = (
 				389CBD2E1A8938FE00FEB39F /* AppDelegate.h */,
 				389CBD2F1A8938FE00FEB39F /* AppDelegate.m */,
-				386B8DD51AA65A3400AAD81C /* GameParameters.h */,
-				386B8DD61AA65A3400AAD81C /* GameParameters.m */,
 				389CBD361A8938FE00FEB39F /* GameViewController.h */,
 				389CBD371A8938FE00FEB39F /* GameViewController.m */,
+				38B8399F1B41CDBD0081E04F /* Model */,
 				386B8DD81AA65B2800AAD81C /* Scenes */,
 				386B8DD91AA65B4D00AAD81C /* Game elements */,
 				389CBD391A8938FE00FEB39F /* Main.storyboard */,
@@ -160,6 +162,17 @@
 				389CBD4A1A8938FE00FEB39F /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		38B8399F1B41CDBD0081E04F /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				386B8DD51AA65A3400AAD81C /* GameParameters.h */,
+				386B8DD61AA65A3400AAD81C /* GameParameters.m */,
+				38B839A01B41CF860081E04F /* GameScore.h */,
+				38B839A11B41CF860081E04F /* GameScore.m */,
+			);
+			name = Model;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,6 +275,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38B839A21B41CF860081E04F /* GameScore.m in Sources */,
 				38F81CA01A9D0E0100E21B62 /* Wall.m in Sources */,
 				387CA9181B1AA837004F8A58 /* GameOverScene.m in Sources */,
 				386B8DD71AA65A3400AAD81C /* GameParameters.m in Sources */,

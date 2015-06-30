@@ -9,6 +9,7 @@
 #import "GameScene.h"
 #import "GameOverScene.h"
 #import "GameParameters.h"
+#import "GameScore.h"
 #import "Wall.h"
 #import "Player.h"
 
@@ -16,6 +17,7 @@
 @interface GameScene() <SKPhysicsContactDelegate>
 // Model
 @property (strong, nonatomic) GameParameters *gameParameters;
+@property (strong, nonatomic) GameScore *gameScore;
 @property (nonatomic) NSUInteger score;
 
 // Scene elements
@@ -85,6 +87,14 @@ static const uint32_t collectableCategory = 1 << 2;
     return _gameParameters;
 }
 
+- (GameScore *)gameScore
+{
+    if (!_gameScore) {
+        _gameScore = [[GameScore alloc] init];
+    }
+    return _gameScore;
+}
+
 static NSString *const PLAYER_SPRITE_IMAGE = @"Player";
 static const CGFloat PLAYER_SIZE = 32.0;
 
@@ -123,7 +133,7 @@ static const CGFloat PLAYER_SIZE = 32.0;
     return _collectables;
 }
 
-static NSString *const SCORE_LABEL_FONT_NAME = @"HelveticaNeue";
+static NSString *const SCORE_LABEL_FONT_NAME = @"DINAlternate-Bold";
 static const CGFloat SCORE_LABEL_SCALE_FACTOR = 1.0/10.0;
 static const CGFloat SCORE_LABEL_VERTICAL_ALIGN_FACTOR = 9.0/10.0;
 
@@ -181,7 +191,7 @@ static const CGFloat WALL_HEIGHT = 32.0;
 
 - (SKAction *)getMoveThenRestartWallAction
 {
-    NSLog(@"GAME SPEED: %f", self.gameParameters.gameSpeed);
+    //NSLog(@"GAME SPEED: %f", self.gameParameters.gameSpeed);
     
     // Move wall down and restart it's position when it reaches the bottom
     SKAction *restartWall = [SKAction customActionWithDuration:0.0
@@ -344,22 +354,10 @@ static const CGFloat COLLECTABLE_RADIUS = 5.0;
     SKNode *nodeA = contact.bodyA.node;
     SKNode *nodeB = contact.bodyB.node;
     
-    if ([nodeA.parent.name isEqualToString:WALL_NODE_NAME]) {
-        NSLog(@"COLLISION WITH WALL");
-        [self collisionWithNode:nodeA];
-    }
-    else if ([nodeB.parent.name isEqualToString:WALL_NODE_NAME]) {
-        NSLog(@"COLLISION WITH WALL");
-        [self collisionWithNode:nodeB];
-    }
-    else if ([nodeA.name isEqualToString:COLLECTABLE_NODE_NAME]) {
-        NSLog(@"COLLISION WITH COLLECTABLE");
-        [self collectableCollected:nodeA];
-    }
-    else if ([nodeB.name isEqualToString:COLLECTABLE_NODE_NAME]) {
-        NSLog(@"COLLISION WITH COLLECTABLE");
-        [self collectableCollected:nodeB];
-    }
+    if ([nodeA.parent.name isEqualToString:WALL_NODE_NAME]) [self collisionWithNode:nodeA];
+    else if ([nodeB.parent.name isEqualToString:WALL_NODE_NAME]) [self collisionWithNode:nodeB];
+    else if ([nodeA.name isEqualToString:COLLECTABLE_NODE_NAME]) [self collectableCollected:nodeA];
+    else if ([nodeB.name isEqualToString:COLLECTABLE_NODE_NAME]) [self collectableCollected:nodeB];
 }
 
 - (void)collisionWithNode:(SKNode *)node
@@ -376,8 +374,8 @@ static const CGFloat COLLECTABLE_RADIUS = 5.0;
         }
     }
     
+    // Set collision elements to red color
     [self.player setRedColorToBody];
-    
     Wall *wall = (Wall *)node.parent;
     [wall setRedColorToElementWithName:node.name];
     
@@ -389,6 +387,9 @@ static const CGFloat GAME_OVER_SCENE_RECOGNIZERS_DELAY = 2.0;
 
 - (void)showGameOver
 {
+    if ([self.gameScore isHighScore:self.score]) self.gameScore.highScore = self.score;
+    NSLog(@"High Score: %lu", (unsigned long)self.gameScore.highScore);
+    
     // Present game over scene
     GameOverScene *gameOverScene = [GameOverScene sceneWithSize:self.view.bounds.size];
     
